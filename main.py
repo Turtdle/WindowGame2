@@ -69,10 +69,10 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                     running = False
         
         current_pos = my_window.position
-        if pos_send_pipe and current_pos != my_position:
+        if True:
              my_position = current_pos
              try:
-                print(f'window: {window_title} is sending position')
+                #print(f'window: {window_title} is sending position')
                 pos_send_pipe.send(my_position)
              except (BrokenPipeError, OSError):
                 print(f"{window_title}: Error sending position, pipe may be closed.")
