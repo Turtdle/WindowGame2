@@ -67,7 +67,7 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
             if transfer_send_pipe and not transfer_send_pipe.closed:
                 transfer_send_pipe.send({"type": "window_closing"})
         except:
-            pass  # Ignore errors during shutdown
+            pass  
         
         for pipe in [pos_send_pipe, pos_recv_pipe, transfer_send_pipe, transfer_recv_pipe]:
             if pipe:
@@ -101,10 +101,28 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
         pygame.quit()
 
 def main():
+
+    """
+
+    Inter-Process Communication
+    4 pipes, 8 ends
+    1 pipe for sending window position from window 1 to window 2
+    1 pipe for sending window position from window 2 to window 1
+    1 pipe for sending data from window 1 to window 2
+    1 pipe for sending data from window 2 to window 1
+
+    """
+
     pos_pipe_1_recv, pos_pipe_1_send = multiprocessing.Pipe(duplex=False)
     pos_pipe_2_recv, pos_pipe_2_send = multiprocessing.Pipe(duplex=False)
     transfer_pipe_1_recv, transfer_pipe_1_send = multiprocessing.Pipe(duplex=False)  
     transfer_pipe_2_recv, transfer_pipe_2_send = multiprocessing.Pipe(duplex=False)
+
+    """
+
+    Process Creation
+
+    """
 
     window1_process = multiprocessing.Process(
         target=create_window,
