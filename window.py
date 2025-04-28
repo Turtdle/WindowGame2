@@ -89,13 +89,37 @@ class WindowClass:
                     except (BrokenPipeError, OSError) as e:
                         print(f"{self.window_title}: Error notifying of level completion: {e}")
         
+        # Check if player should be teleported after level completion
+        if self.current_level and hasattr(self.current_level, 'should_teleport_player') and self.current_level.should_teleport_player:
+            # If we're Window 2 and need to teleport player to Window 1
+            if self.window_title == "Window 2" and self.has_player:
+                print(f"{self.window_title}: Teleporting player back to Window 1")
+                try:
+                    teleport_data = {
+                        "type": "teleport_player",
+                        "position": (self.width//2, self.height//2)
+                    }
+                    self.transfer_send_pipe.send(teleport_data)
+                    self.has_player = False
+                    self.player = None
+                    self.current_level.should_teleport_player = False
+                except (BrokenPipeError, OSError) as e:
+                    print(f"{self.window_title}: Error teleporting player: {e}")
+        
         # Handle transfer data (player movement & level changes)
         if self.transfer_recv_pipe and self.transfer_recv_pipe.poll():
             try:
                 data = self.transfer_recv_pipe.recv()
                 
+                # Handle teleport data
+                if isinstance(data, dict) and data.get("type") == "teleport_player":
+                    if self.window_title == "Window 1":
+                        self.has_player = True
+                        position = data.get("position", (self.width//2, self.height//2))
+                        self.player = Character(x=position[0], y=position[1])
+                        print(f"{self.window_title}: Player teleported back at position {position}")
                 # Check if this is a level change notification
-                if isinstance(data, dict) and data.get("type") == "level_change":
+                elif isinstance(data, dict) and data.get("type") == "level_change":
                     level_name = data.get("level_name")
                     if level_name == "Level1":
                         from levels.level1 import Level1
@@ -147,8 +171,11 @@ class WindowClass:
             self.player.update()
             
             transfer_occurred = False
+            
+            # Only allow transfers if not in level selector
+            allow_transfer = not (self.current_level and self.current_level.__class__.__name__ == "Level_Selector")
 
-            if self.player.x + self.player.size >= self.width:
+            if allow_transfer and self.player.x + self.player.size >= self.width:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
                     vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 100
@@ -168,7 +195,7 @@ class WindowClass:
                         except (BrokenPipeError, OSError):
                             print(f"{self.window_title}: Error sending player, pipe may be closed.")
                             self.running = False
-            elif self.player.x <= 0:
+            elif allow_transfer and self.player.x <= 0:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
                     vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 100 
