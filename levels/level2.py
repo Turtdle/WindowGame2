@@ -59,9 +59,6 @@ class Level2(Level):
         text_rect2 = text_surface2.get_rect(center=(self.window1_width//2, 90))
         screen.blit(text_surface2, text_rect2)
         
-        # Draw start point (red)
-        pygame.draw.rect(screen, (255, 0, 0), self.start_point)
-        
         # Draw goal (blue)
         pygame.draw.rect(screen, (0, 0, 255), self.goal)
         
@@ -83,11 +80,7 @@ class Level2(Level):
         
         # Draw the player if present
         if player:
-            # Store original velocity
-            original_vx, original_vy = player.vx, player.vy
-            
-            # Handle player input - OVERRIDE default character movement
-            self.handle_player_movement(player)
+
             
             # Apply gravity
             self.apply_gravity(player)

@@ -30,11 +30,12 @@ class WindowClass:
         self.running = running
         self.current_level = current_level
 
+# In window.py __init__ method:
         if self.origin:
             self.has_player = True
             self.player = Character(x=width//2, y=height//2)
-            
-        # Initialize mouse handling
+            if self.current_level:
+                self.player.set_level(self.current_level.__class__.__name__)
         self.mouse_down = False
         
         # DEBUG: Track teleportation status
@@ -69,7 +70,8 @@ class WindowClass:
                 try:
                     teleport_data = {
                         "type": "teleport_player",
-                        "position": (self.width//2, self.height//2)
+                        "position": (self.width//2, self.height//2),
+                        "level": self.current_level.__class__.__name__  # Add this line
                     }
                     self.transfer_send_pipe.send(teleport_data)
                     self.teleport_sent = True  # Mark that we've sent the teleport message
@@ -89,6 +91,9 @@ class WindowClass:
                 self.current_level = next_level
                 print(f"{self.window_title}: Switched from {prev_level_name} to {next_level.__class__.__name__}")
                 
+                # Update the player's level information
+                if self.player:
+                    self.player.set_level(next_level.__class__.__name__)
                 # If this is Window 1, send level change to Window 2
                 if self.window_title == "Window 1":
                     try:
@@ -122,7 +127,7 @@ class WindowClass:
                 data = self.transfer_recv_pipe.recv()
                 print(f"{self.window_title}: Received data: {data}")
                 
-                # Handle teleport data
+                # When receiving teleport data:
                 if isinstance(data, dict) and data.get("type") == "teleport_player":
                     if self.window_title == "Window 1":
                         print(f"{self.window_title}: Processing teleport_player data")
@@ -133,6 +138,13 @@ class WindowClass:
                         else:  # Update player position if it exists
                             self.player.x = position[0]
                             self.player.y = position[1]
+                        
+                        # Set the player's level based on received information
+                        if data.get("level"):
+                            self.player.set_level(data.get("level"))
+                        elif self.current_level:
+                            self.player.set_level(self.current_level.__class__.__name__)
+                            
                         print(f"{self.window_title}: Player teleported back at position {position}")
                         
                 # Check if this is a level change notification
@@ -151,13 +163,20 @@ class WindowClass:
                         self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
                 # Handle player transfers
+# Handle player transfers
                 elif not self.has_player and isinstance(data, dict) and "side" in data:
                     self.has_player = True
                     
                     if data.get("side") == "right":
-                        self.player = Character(x=0 + 5, y=data.get("relative", self.height//2)) 
+                        self.player = Character(x=0 + 5, y=data.get("relative", self.height//2))
                     elif data.get("side") == "left":
                         self.player = Character(x=self.width - Character().size - 5, y=data.get("relative", self.height//2))
+                    
+                    # Set the player's level based on received information
+                    if data.get("level"):
+                        self.player.set_level(data.get("level"))
+                    elif self.current_level:
+                        self.player.set_level(self.current_level.__class__.__name__)
                     
                     print(f"{self.window_title} received player at ({self.player.x}, {self.player.y})")
                     
@@ -206,6 +225,7 @@ class WindowClass:
                         pass_data = {
                             "side": "right",
                             "relative": self.player.y,
+                            "level": self.current_level.__class__.__name__  # Add this line
                         }
                         try:
                             self.transfer_send_pipe.send(pass_data)
@@ -222,10 +242,11 @@ class WindowClass:
                     horz_aligned = abs((self.other_window_pos[0] + self.width) - my_position[0]) < 50
 
                     if vert_aligned and horz_aligned:
-                        print(f"{self.window_title}: Attempting to pass player left to {other_win_title}") 
+                        print(f"{self.window_title}: Attempting to pass player left to {other_win_title}")
                         pass_data = {
                             "side": "left",
                             "relative": self.player.y,
+                            "level": self.current_level.__class__.__name__  # Add this line
                         }
                         try:
                             self.transfer_send_pipe.send(pass_data)
