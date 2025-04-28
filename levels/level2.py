@@ -1,12 +1,14 @@
 import pygame
 from levels.level import Level
-import level_data  # Import our level data module
+import level_data 
+
+#if anyone is reading this file and gets confused i swapped window 1 and window 2 walls and didnt change the names coz im lazy
 
 class Level2(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
         super().__init__(window1_width, window1_height, window2_width, window2_height)
         
-        self.spawn_position = (100, window1_height - 150)  # Near bottom left
+        self.spawn_position = (100, window1_height - 150)
         self.wall_thickness = 25
         
         self.window1_walls = [
@@ -45,16 +47,10 @@ class Level2(Level):
         screen.blit(text_surface, text_rect)
         text_rect2 = text_surface2.get_rect(center=(self.window1_width//2, 90))
         screen.blit(text_surface2, text_rect2)
-        
-        pygame.draw.rect(screen, (0, 0, 255), self.goal)
-        
-        goal_font = pygame.font.Font(None, 36)
-        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
-        goal_text_rect = goal_text.get_rect(center=self.goal.center)
-        screen.blit(goal_text, goal_text_rect)
+    
         
         
-        for wall in self.window1_walls:
+        for wall in self.window2_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
         
         if player:
@@ -63,25 +59,24 @@ class Level2(Level):
             
             self.handle_jump(player)
             
-            self.check_wall_collisions(player, self.window1_walls)
+            self.check_wall_collisions(player, self.window2_walls)
             
             player.draw(screen)
             
-            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-            if player_rect.colliderect(self.goal) and not self.completed:
-                self.completed = True
-                self.should_teleport_player = True
-                print("Level 2 completed! Teleporting player back to Window 1")
-                
-                level_data.mark_level_completed("Level2")
+
             
     def draw_window2(self, screen, player=None):
         font = pygame.font.Font(None, 36)
         
-        for wall in self.window2_walls:
+        for wall in self.window1_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
         
-
+        pygame.draw.rect(screen, (0, 0, 255), self.goal)
+        
+        goal_font = pygame.font.Font(None, 36)
+        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
+        goal_text_rect = goal_text.get_rect(center=self.goal.center)
+        screen.blit(goal_text, goal_text_rect)
         if player:
             original_vx, original_vy = player.vx, player.vy
             
@@ -91,10 +86,16 @@ class Level2(Level):
             
             self.handle_jump(player)
             
-            self.check_wall_collisions(player, self.window2_walls)
+            self.check_wall_collisions(player, self.window1_walls)
             
             player.draw(screen)
-    
+            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+            if player_rect.colliderect(self.goal) and not self.completed:
+                self.completed = True
+                self.should_teleport_player = True
+                print("Level 2 completed! Teleporting player back to Window 1")
+                
+                level_data.mark_level_completed("Level2")
     def apply_gravity(self, player):
         player.vy += self.gravity
         

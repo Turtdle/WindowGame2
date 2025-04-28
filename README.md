@@ -1,4 +1,3 @@
-Video: https://youtu.be/W4bHu_3r9Is
 ```
 Setup:
 install pygame
@@ -15,7 +14,10 @@ Gameplay loop:
 Gameplay Mechanics:
 WASD to move, space to jump (you can jump in level 2 and 3), you win each level by getting to the goal
 
-
+```
+Video: https://youtu.be/L15vutHIlqg
+CONTAINS SPOILERS ON HOW TO BEAT ALL LEVELS
+```
 
 ## OS Concepts:
 
