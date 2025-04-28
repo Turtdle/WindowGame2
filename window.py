@@ -201,6 +201,7 @@ class WindowClass:
 
                 # Handle player transfers
 # Handle player transfers
+                # Modify the existing player transfer reception code in window.py
                 elif not self.has_player and isinstance(data, dict) and "side" in data:
                     self.has_player = True
                     
@@ -208,6 +209,10 @@ class WindowClass:
                         self.player = Character(x=0 + 5, y=data.get("relative", self.height//2))
                     elif data.get("side") == "left":
                         self.player = Character(x=self.width - Character().size - 5, y=data.get("relative", self.height//2))
+                    elif data.get("side") == "bottom":
+                        self.player = Character(x=data.get("relative", self.width//2), y=0 + 5)
+                    elif data.get("side") == "top":
+                        self.player = Character(x=data.get("relative", self.width//2), y=self.height - Character().size - 5)
                     
                     # Set the player's level based on received information
                     if data.get("level"):
@@ -216,7 +221,6 @@ class WindowClass:
                         self.player.set_level(self.current_level.__class__.__name__)
                     
                     print(f"{self.window_title} received player at ({self.player.x}, {self.player.y})")
-                    
                 elif isinstance(data, dict) and data.get("type") == "level_completed":
                     level_name = data.get("level_name")
                     if level_name == "Level_Selector" and self.window_title == "Window 1":
@@ -293,7 +297,54 @@ class WindowClass:
                         except (BrokenPipeError, OSError):
                             print(f"{self.window_title}: Error sending player, pipe may be closed.")
                             self.running = False
-            
+            # Add to window.py in the tick method, after the existing horizontal transfer code
+# (around line 179, near the existing transfer logic)
+
+            # Check for bottom edge transfer
+            if allow_transfer and self.player.y + self.player.size >= self.height:
+                other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
+                if self.other_window_pos and self.transfer_send_pipe:
+                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 100
+                    vert_aligned = abs((my_position[1] + self.height) - self.other_window_pos[1]) < 50
+
+                    if horz_aligned and vert_aligned:
+                        print(f"{self.window_title}: Attempting to pass player down to {other_win_title}")
+                        pass_data = {
+                            "side": "bottom",
+                            "relative": self.player.x,
+                            "level": self.current_level.__class__.__name__
+                        }
+                        try:
+                            self.transfer_send_pipe.send(pass_data)
+                            self.has_player = False
+                            self.player = None
+                            transfer_occurred = True
+                        except (BrokenPipeError, OSError):
+                            print(f"{self.window_title}: Error sending player, pipe may be closed.")
+                            self.running = False
+
+            # Check for top edge transfer
+            elif allow_transfer and self.player.y <= 0:
+                other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
+                if self.other_window_pos and self.transfer_send_pipe:
+                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 100
+                    vert_aligned = abs(my_position[1] - (self.other_window_pos[1] + self.height)) < 50
+
+                    if horz_aligned and vert_aligned:
+                        print(f"{self.window_title}: Attempting to pass player up to {other_win_title}")
+                        pass_data = {
+                            "side": "top",
+                            "relative": self.player.x,
+                            "level": self.current_level.__class__.__name__
+                        }
+                        try:
+                            self.transfer_send_pipe.send(pass_data)
+                            self.has_player = False
+                            self.player = None
+                            transfer_occurred = True
+                        except (BrokenPipeError, OSError):
+                            print(f"{self.window_title}: Error sending player, pipe may be closed.")
+                            self.running = False
             if self.has_player and self.player and not transfer_occurred:
                 self.player.keep_in_bounds(self.width, self.height)
     
