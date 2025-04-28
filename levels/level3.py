@@ -11,16 +11,16 @@ class Level3(Level):
         
         self.window1_walls = [
             pygame.Rect(0, 50, window1_width, self.wall_thickness),
-            pygame.Rect(0, window1_height // 3, window1_width // 2 - 100, self.wall_thickness),
-            pygame.Rect(window1_width // 2 + 100, window1_height // 3, window1_width // 2, self.wall_thickness),
-        ]
+            pygame.Rect(0, window1_height // 3, window1_width // 2 +300, self.wall_thickness),
+            pygame.Rect(window1_width // 2 + 500, window1_height // 3, window1_width // 2, self.wall_thickness),
+        ] 
         
         self.window2_walls = [
             pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness),
             pygame.Rect(0, window2_height // 3, window2_width // 3, self.wall_thickness),  # Horizontal part
-            pygame.Rect(window2_width // 3 - self.wall_thickness, window2_height // 3, self.wall_thickness, window2_height // 3),  # Vertical part
+            pygame.Rect(window2_width // 3 - self.wall_thickness, 0, self.wall_thickness, window2_height // 3),  # Vertical part
             pygame.Rect(2 * window2_width // 3, window2_height // 3, window2_width // 3, self.wall_thickness),  # Horizontal part
-            pygame.Rect(2 * window2_width // 3, window2_height // 3, self.wall_thickness, window2_height // 3),  # Vertical part
+            pygame.Rect(2 * window2_width // 3, 0, self.wall_thickness, window2_height // 3),  # Vertical part
         ]
         
         self.goal = pygame.Rect(
@@ -42,12 +42,7 @@ class Level3(Level):
         text_rect = text_surface.get_rect(center=(self.window1_width//2, 30))
         screen.blit(text_surface, text_rect)
         
-        pygame.draw.rect(screen, (0, 0, 255), self.goal)
         
-        goal_font = pygame.font.Font(None, 36)
-        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
-        goal_text_rect = goal_text.get_rect(center=self.goal.center)
-        screen.blit(goal_text, goal_text_rect)
         
         for wall in self.window1_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
@@ -61,13 +56,7 @@ class Level3(Level):
             
             player.draw(screen)
             
-            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-            if player_rect.colliderect(self.goal) and not self.completed:
-                self.completed = True
-                self.should_teleport_player = True
-                print("Level 3 completed! Teleporting player back to Window 1")
-                
-                level_data.mark_level_completed("Level3")
+
             
     
     def draw_window2(self, screen, player=None):
@@ -78,7 +67,14 @@ class Level3(Level):
         
         for wall in self.window2_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
+
+        pygame.draw.rect(screen, (0, 0, 255), self.goal)
         
+        goal_font = pygame.font.Font(None, 36)
+        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
+        goal_text_rect = goal_text.get_rect(center=self.goal.center)
+        screen.blit(goal_text, goal_text_rect)
+
         if player:
             self.handle_player_movement(player)
             
@@ -89,7 +85,15 @@ class Level3(Level):
             self.check_wall_collisions(player, self.window2_walls)
             
             player.draw(screen)
-            
+
+            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+            if player_rect.colliderect(self.goal) and not self.completed:
+                self.completed = True
+                self.should_teleport_player = True
+                print("Level 3 completed! Teleporting player back to Window 1")
+                
+                level_data.mark_level_completed("Level3")
+                
     def apply_gravity(self, player):
         player.vy += self.gravity
         

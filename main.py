@@ -150,7 +150,7 @@ def main():
         print("Parent pipe ends closed.")
     except Exception as e:
         print(f"Error closing parent pipe ends: {e}")
-
+        
     print("Waiting for processes to join...")
     window1_process.join()
     print("Window 1 joined.")
