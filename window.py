@@ -51,7 +51,7 @@ class WindowClass:
         except (BrokenPipeError, OSError, IOError):
             print(f"{self.window_title}: Other window appears to be closed, shutting down")
             self.running = False
-            return  # Exit tick early
+            return  
         if self.pos_recv_pipe and self.pos_recv_pipe.poll():
             try:
                 self.other_window_pos = self.pos_recv_pipe.recv()
@@ -71,6 +71,15 @@ class WindowClass:
                 self.running = False
         
         if self.current_level and hasattr(self.current_level, 'should_teleport_player') and self.current_level.should_teleport_player and not self.teleport_sent:
+            
+            """
+            
+            Synchronization
+            If you complete a level AND player is on window 2, tell window 1 to spawn the player
+            Delete the player on window 2
+
+            """
+
             if self.window_title == "Window 2" and self.has_player:
                 print(f"{self.window_title}: Teleporting player back to Window 1")
                 try:
@@ -80,7 +89,7 @@ class WindowClass:
                         "level": self.current_level.__class__.__name__
                     }
                     self.transfer_send_pipe.send(teleport_data)
-                    self.teleport_sent = True  # Mark that we've sent the teleport message
+                    self.teleport_sent = True  
                     self.has_player = False
                     self.player = None
                     self.current_level.should_teleport_player = False
@@ -99,6 +108,15 @@ class WindowClass:
                     self.player.set_level(next_level.__class__.__name__)
                     if hasattr(next_level, 'spawn_position'):
                         self.player.x, self.player.y = next_level.spawn_position
+
+                """
+                
+                Synchronization:
+                If we move from one level to another, we need to update the other window
+
+                """
+                
+
                 if self.window_title == "Window 1":
                     try:
                         level_data = {
@@ -144,9 +162,9 @@ class WindowClass:
                         else:
                             position = position or (self.width//2, self.height//2)
                             
-                        if not self.player: # Create player if it doesn't exist
+                        if not self.player: 
                             self.player = Character(x=position[0], y=position[1])
-                        else: # Update player position if it exists
+                        else: 
                             self.player.x = position[0]
                             self.player.y = position[1]
                         
@@ -163,11 +181,11 @@ class WindowClass:
                         from levels.level1 import Level1
                         self.current_level = Level1(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
-                    elif level_name == "Level2":  # Add Level2 handling
+                    elif level_name == "Level2":  
                         from levels.level2 import Level2
                         self.current_level = Level2(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
-                    elif level_name == "Level3":  # Add Level3 handling
+                    elif level_name == "Level3": 
                         from levels.level3 import Level3
                         self.current_level = Level3(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
@@ -194,6 +212,12 @@ class WindowClass:
                         self.player.set_level(self.current_level.__class__.__name__)
                     
                     print(f"{self.window_title} received player at ({self.player.x}, {self.player.y})")
+                    """
+
+                    Synchronization:
+                    If the player completes the level, we need to tell the other window
+
+                    """
                 elif isinstance(data, dict) and data.get("type") == "level_completed":
                     level_name = data.get("level_name")
                     if level_name == "Level_Selector" and self.window_title == "Window 1":
@@ -218,6 +242,12 @@ class WindowClass:
                 print(f"{self.window_title}: Error receiving transfer data: {e}")
         
         if self.has_player and self.player:
+            """
+
+            Inter-Process Communication:
+            Passing the player to the other window
+
+            """
             self.player.handle_keys()
             self.player.update()
             
@@ -226,6 +256,7 @@ class WindowClass:
             allow_transfer = not (self.current_level and self.current_level.__class__.__name__ == "Level_Selector")
 
             if allow_transfer and self.player.x + self.player.size >= self.width:
+
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
                     vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 150

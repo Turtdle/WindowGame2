@@ -3,8 +3,13 @@ import os
 
 SAVE_FILE_PATH = "level_data.json"
 
+"""
+
+Save File Management
+
+"""
+
 def load_completed_levels():
-    """Load the completed levels from the JSON file."""
     if not os.path.exists(SAVE_FILE_PATH):
         default_data = {
             "completed_levels": []
@@ -24,7 +29,6 @@ def load_completed_levels():
         return default_data["completed_levels"]
 
 def save_completed_levels(completed_levels):
-    """Save the list of completed levels to the JSON file."""
     data = {
         "completed_levels": completed_levels
     }
@@ -38,7 +42,6 @@ def save_completed_levels(completed_levels):
         return False
 
 def mark_level_completed(level_name):
-    """Mark a level as completed."""
     completed_levels = load_completed_levels()
     
     if level_name not in completed_levels:
