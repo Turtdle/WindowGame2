@@ -7,7 +7,7 @@ class Level3(Level):
         super().__init__(window1_width, window1_height, window2_width, window2_height)
         
         # Set custom spawn position
-        self.spawn_position = (0, window1_height - 150)  # Near bottom left
+        self.spawn_position = (0, 100)  # Near bottom left
         # Wall thickness
         self.wall_thickness = 25
         

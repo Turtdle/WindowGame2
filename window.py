@@ -101,6 +101,9 @@ class WindowClass:
                 # Update the player's level information
                 if self.player:
                     self.player.set_level(next_level.__class__.__name__)
+                    # Add this: reposition player when level changes
+                    if hasattr(next_level, 'spawn_position'):
+                        self.player.x, self.player.y = next_level.spawn_position
                 # If this is Window 1, send level change to Window 2
                 if self.window_title == "Window 1":
                     try:
@@ -141,11 +144,12 @@ class WindowClass:
                         self.has_player = True
                         
                         # Check for custom spawn position in the level
-                        if self.current_level and hasattr(self.current_level, 'spawn_posi   tion'):
+                        position = data.get("position")
+                        if position is None and self.current_level and hasattr(self.current_level, 'spawn_position'):
                             position = self.current_level.spawn_position
                         else:
-                            # Fall back to position from data or default center
-                            position = data.get("position", (self.width//2, self.height//2))
+                            # Final fallback
+                            position = position or (self.width//2, self.height//2)
                             
                         if not self.player: # Create player if it doesn't exist
                             self.player = Character(x=position[0], y=position[1])
