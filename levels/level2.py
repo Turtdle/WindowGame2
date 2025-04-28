@@ -32,12 +32,6 @@ class Level2(Level):
             pygame.Rect(window2_width//2, window2_height - 350, window2_width//4, self.wall_thickness)
         ]
         
-        # Define the starting point in window 1 (red in the sketch)
-        self.start_point = pygame.Rect(
-            100, 
-            window1_height - 100, 
-            80, 80
-        )
         
         # Define the goal in window 1 (blue in the sketch)
         self.goal = pygame.Rect(
