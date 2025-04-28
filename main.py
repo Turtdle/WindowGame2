@@ -22,7 +22,6 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
     pygame.display.set_caption(window_title)
     clock = pygame.time.Clock()
     
-    # Create the level selector
     level_selector = Level_Selector(width, height, width, height)
     
     window = WindowClass(window_title=window_title, width=width, height=height, bg_color=bg_color,
@@ -42,7 +41,6 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     window.running = False
-                    # Signal to the other window that we're closing
                     if transfer_send_pipe:
                         try:
                             transfer_send_pipe.send({"type": "window_closing"})
@@ -51,23 +49,19 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         window.running = False
-                        # Signal to the other window that we're closing
                         if transfer_send_pipe:
                             try:
                                 transfer_send_pipe.send({"type": "window_closing"})
                             except:
                                 pass
                 
-                # Pass other events to the window
                 window.handle_event(event)
             
-            # Draw the window
             window.draw(screen)
             
             pygame.display.flip()
             clock.tick(60)
     finally:
-        # Always clean up resources
         print(f"Closing {window_title}")
         try:
             if transfer_send_pipe and not transfer_send_pipe.closed:
@@ -75,7 +69,6 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
         except:
             pass  # Ignore errors during shutdown
         
-        # Close pipes with better error handling
         for pipe in [pos_send_pipe, pos_recv_pipe, transfer_send_pipe, transfer_recv_pipe]:
             if pipe:
                 try:

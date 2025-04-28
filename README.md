@@ -5,7 +5,7 @@ install pygame and multiprocessing with pip
 run main.py
 
 Game overview:
-Title: A Window
+Title: Alt-Tab Adventures
 
 Summary: A puzzle game where you direct yourself around mazes and obstacle courses, and you solve the courses by moving two windows around your screen. The player can jump from one window to another if they are next to each other. 
 
