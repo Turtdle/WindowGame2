@@ -258,8 +258,8 @@ class WindowClass:
             if allow_transfer and self.player.x + self.player.size >= self.width:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
-                    vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 100
-                    horz_aligned = abs((my_position[0] + self.width) - self.other_window_pos[0]) < 50
+                    vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 150
+                    horz_aligned = abs((my_position[0] + self.width) - self.other_window_pos[0]) < 150
 
                     if vert_aligned and horz_aligned:
                         print(f"{self.window_title}: Attempting to pass player right to {other_win_title}")
@@ -279,8 +279,8 @@ class WindowClass:
             elif allow_transfer and self.player.x <= 0:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
-                    vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 100 
-                    horz_aligned = abs((self.other_window_pos[0] + self.width) - my_position[0]) < 50
+                    vert_aligned = abs(my_position[1] - self.other_window_pos[1]) < 150 
+                    horz_aligned = abs((self.other_window_pos[0] + self.width) - my_position[0]) < 150
 
                     if vert_aligned and horz_aligned:
                         print(f"{self.window_title}: Attempting to pass player left to {other_win_title}")
@@ -304,8 +304,8 @@ class WindowClass:
             elif allow_transfer and self.player.y + self.player.size >= self.height:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
-                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 100
-                    vert_aligned = abs((my_position[1] + self.height) - self.other_window_pos[1]) < 50
+                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 150
+                    vert_aligned = abs((my_position[1] + self.height) - self.other_window_pos[1]) < 150
 
                     if horz_aligned and vert_aligned:
                         print(f"{self.window_title}: Attempting to pass player down to {other_win_title}")
@@ -327,8 +327,8 @@ class WindowClass:
             elif allow_transfer and self.player.y <= 0:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
-                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 100
-                    vert_aligned = abs(my_position[1] - (self.other_window_pos[1] + self.height)) < 50
+                    horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 150
+                    vert_aligned = abs(my_position[1] - (self.other_window_pos[1] + self.height)) < 150
 
                     if horz_aligned and vert_aligned:
                         print(f"{self.window_title}: Attempting to pass player up to {other_win_title}")

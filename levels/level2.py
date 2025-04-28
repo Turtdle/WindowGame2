@@ -114,11 +114,7 @@ class Level2(Level):
             pygame.draw.rect(screen, (0, 0, 0), wall)
         
         # Draw debug info
-        if player and hasattr(self, 'debug_info'):
-            debug_font = pygame.font.Font(None, 24)
-            debug_text = debug_font.render(self.debug_info, True, (255, 0, 0))
-            screen.blit(debug_text, (10, 120))
-        
+
         # Draw the player if present
         if player:
             # Store original velocity
