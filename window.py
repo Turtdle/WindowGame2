@@ -36,6 +36,9 @@ class WindowClass:
             
         # Initialize mouse handling
         self.mouse_down = False
+        
+        # DEBUG: Track teleportation status
+        self.teleport_sent = False
 
     def tick(self):
         # Handle window position communication
@@ -58,6 +61,26 @@ class WindowClass:
                 print(f"{self.window_title}: Error sending position, pipe may be closed.")
                 self.running = False
         
+        # Check if player should be teleported after level completion - Do this FIRST
+        if self.current_level and hasattr(self.current_level, 'should_teleport_player') and self.current_level.should_teleport_player and not self.teleport_sent:
+            # If we're Window 2 and need to teleport player to Window 1
+            if self.window_title == "Window 2" and self.has_player:
+                print(f"{self.window_title}: Teleporting player back to Window 1")
+                try:
+                    teleport_data = {
+                        "type": "teleport_player",
+                        "position": (self.width//2, self.height//2)
+                    }
+                    self.transfer_send_pipe.send(teleport_data)
+                    self.teleport_sent = True  # Mark that we've sent the teleport message
+                    self.has_player = False
+                    self.player = None
+                    self.current_level.should_teleport_player = False
+                    print(f"{self.window_title}: Teleport message sent to Window 1")
+                except (BrokenPipeError, OSError) as e:
+                    print(f"{self.window_title}: Error teleporting player: {e}")
+        
+        # THEN handle level changes
         if self.current_level:
             next_level = self.current_level.get_next_level()
             if next_level:
@@ -77,8 +100,12 @@ class WindowClass:
                         print(f"{self.window_title}: Sent level change to Window 2")
                     except (BrokenPipeError, OSError) as e:
                         print(f"{self.window_title}: Error sending level change: {e}")
+                
+                # Reset teleport tracking when changing levels
+                self.teleport_sent = False
+                
                 # If this is Window 2, notify Window 1 that it has completed a level
-                elif self.window_title == "Window 2":
+                if self.window_title == "Window 2":
                     try:
                         level_data = {
                             "type": "level_completed",
@@ -89,31 +116,16 @@ class WindowClass:
                     except (BrokenPipeError, OSError) as e:
                         print(f"{self.window_title}: Error notifying of level completion: {e}")
         
-        # Check if player should be teleported after level completion
-        if self.current_level and hasattr(self.current_level, 'should_teleport_player') and self.current_level.should_teleport_player:
-            # If we're Window 2 and need to teleport player to Window 1
-            if self.window_title == "Window 2" and self.has_player:
-                print(f"{self.window_title}: Teleporting player back to Window 1")
-                try:
-                    teleport_data = {
-                        "type": "teleport_player",
-                        "position": (self.width//2, self.height//2)
-                    }
-                    self.transfer_send_pipe.send(teleport_data)
-                    self.has_player = False
-                    self.player = None
-                    self.current_level.should_teleport_player = False
-                except (BrokenPipeError, OSError) as e:
-                    print(f"{self.window_title}: Error teleporting player: {e}")
-        
         # Handle transfer data (player movement & level changes)
         if self.transfer_recv_pipe and self.transfer_recv_pipe.poll():
             try:
                 data = self.transfer_recv_pipe.recv()
+                print(f"{self.window_title}: Received data: {data}")
                 
                 # Handle teleport data
                 if isinstance(data, dict) and data.get("type") == "teleport_player":
                     if self.window_title == "Window 1":
+                        print(f"{self.window_title}: Processing teleport_player data")
                         self.has_player = True
                         position = data.get("position", (self.width//2, self.height//2))
                         if not self.player:  # Create player if it doesn't exist
@@ -122,6 +134,7 @@ class WindowClass:
                             self.player.x = position[0]
                             self.player.y = position[1]
                         print(f"{self.window_title}: Player teleported back at position {position}")
+                        
                 # Check if this is a level change notification
                 elif isinstance(data, dict) and data.get("type") == "level_change":
                     level_name = data.get("level_name")
@@ -134,6 +147,7 @@ class WindowClass:
                         from levels.level_selector import Level_Selector
                         self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
+                        
                 # Handle player transfers
                 elif not self.has_player and isinstance(data, dict) and "side" in data:
                     self.has_player = True

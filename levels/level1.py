@@ -56,7 +56,7 @@ class Level1(Level):
         
         # Draw walls
         for wall in self.window1_walls:
-            pygame.draw.rect(screen, (0, 0, 0), wall)  # Green walls
+            pygame.draw.rect(screen, (0, 0, 0), wall)  # Black walls (was using (0,0,0) already)
         
         # Draw the player if present
         if player:
@@ -67,7 +67,7 @@ class Level1(Level):
     def draw_window2(self, screen, player=None):
         # Draw walls
         for wall in self.window2_walls:
-            pygame.draw.rect(screen, (0, 0, 0), wall)  # Green walls
+            pygame.draw.rect(screen, (0, 0, 0), wall)  # Black walls (was using (0,0,0) already)
         
         # Draw the goal
         pygame.draw.rect(screen, (0, 0, 255), self.goal)  # Blue goal
@@ -135,7 +135,8 @@ class Level1(Level):
     
     def get_next_level(self):
         # If the level is completed, return to level selector
-        if self.completed:
+        # IMPORTANT: Only return the next level if teleportation is complete
+        if self.completed and not self.should_teleport_player:
             print("Returning to level selector...")
             from levels.level_selector import Level_Selector
             return Level_Selector(self.window1_width, self.window1_height, 
