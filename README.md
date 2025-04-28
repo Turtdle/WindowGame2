@@ -10,7 +10,7 @@ run main.py
 Summary: A puzzle game where you direct yourself around mazes and obstacle courses, and you solve the courses by moving two windows around your screen. The player can jump from one window to another if they are next to each other. 
 
 Gameplay loop:
-    > Select a level from the level select. Complete the level. Select a new level. After unique 3 levels are > > > completed, you win
+    Select a level from the level select. Complete the level. Select a new level. After unique 3 levels are completed, you win
 
 Gameplay Mechanics:
 WASD to move, space to jump (you can jump in level 2 and 3), you win each level by getting to the goal
