@@ -2,6 +2,7 @@
 import pygame
 from levels.level import Level
 from levels.level1 import Level1
+from levels.level2 import Level2  # Import Level2
 
 class Level_Selector(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
@@ -27,10 +28,10 @@ class Level_Selector(Level):
                 "rect": pygame.Rect(window1_width//2 - box_width//2, 
                                    window1_height//2, 
                                    box_width, box_height),
-                "color": (150, 150, 150),  # Gray for inactive levels
+                "color": (0, 200, 0),  # Green for level 2 (now active)
                 "text": "Level 2",
-                "level_class": None,
-                "active": False
+                "level_class": Level2,  # Set Level2 class
+                "active": True         # Set to active
             },
             {
                 "rect": pygame.Rect(window1_width//2 - box_width//2, 

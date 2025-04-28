@@ -142,12 +142,14 @@ class WindowClass:
                         from levels.level1 import Level1
                         self.current_level = Level1(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
-                    # Can add other levels here as they're implemented
+                    elif level_name == "Level2":  # Add Level2 handling
+                        from levels.level2 import Level2
+                        self.current_level = Level2(self.width, self.height, self.width, self.height)
+                        print(f"{self.window_title}: Received level change to {level_name}")
                     elif level_name == "Level_Selector":
                         from levels.level_selector import Level_Selector
                         self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
-                        
                 # Handle player transfers
                 elif not self.has_player and isinstance(data, dict) and "side" in data:
                     self.has_player = True
