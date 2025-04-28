@@ -46,8 +46,18 @@ class WindowClass:
 
     def tick(self):
         try:
+            
+            if self.my_window:
+                try:
+                    pos = self.my_window.position
+                   
+                    self.my_position = (pos[0], pos[1])
+                except Exception as e:
+                    print(f"{self.window_title}: Error getting window position: {e}")
+            
             if self.pos_send_pipe and not self.pos_send_pipe.closed:
-                self.pos_send_pipe.send(self.my_window.position)
+               
+                self.pos_send_pipe.send(self.my_position)
         except (BrokenPipeError, OSError, IOError):
             print(f"{self.window_title}: Other window appears to be closed, shutting down")
             self.running = False
