@@ -15,8 +15,6 @@ class Level3(Level):
         self.window1_walls = [
             # Top horizontal wall
             pygame.Rect(0, 50, window1_width, self.wall_thickness),
-            # Bottom horizontal wall - ground
-            pygame.Rect(0, window1_height - 50, window1_width, self.wall_thickness),
             # Left platform
             pygame.Rect(0, window1_height // 3, window1_width // 2 - 100, self.wall_thickness),
             # Right platform
@@ -25,8 +23,7 @@ class Level3(Level):
         
         # Define walls for window 2 (upper window) - L-shaped platforms
         self.window2_walls = [
-            # Top horizontal wall
-            pygame.Rect(0, 50, window2_width, self.wall_thickness),
+
             # Bottom horizontal wall - ground
             pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness),
             # Left L-shape
