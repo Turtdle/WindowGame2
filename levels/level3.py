@@ -61,7 +61,7 @@ class Level3(Level):
     
     def draw_window2(self, screen, player=None):
         font = pygame.font.Font(None, 36)
-        text_surface = font.render("Use these L-shaped platforms and fall through the gap!", True, (0, 0, 0))
+        text_surface = font.render("", True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(self.window2_width//2, 30))
         screen.blit(text_surface, text_rect)
         

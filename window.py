@@ -45,23 +45,38 @@ class WindowClass:
         self.teleport_sent = False
 
     def tick(self):
+        if not hasattr(self, 'last_position_send_time'):
+            self.last_position_send_time = 0
+        
+        current_time = pygame.time.get_ticks() / 1000  
+        
         try:
             
-            if self.my_window:
-                try:
-                    pos = self.my_window.position
-                   
-                    self.my_position = (pos[0], pos[1])
-                except Exception as e:
-                    print(f"{self.window_title}: Error getting window position: {e}")
-            
-            if self.pos_send_pipe and not self.pos_send_pipe.closed:
-               
-                self.pos_send_pipe.send(self.my_position)
+            if current_time - self.last_position_send_time >= 0.5:
+                if self.pos_send_pipe and not self.pos_send_pipe.closed:
+                    self.pos_send_pipe.send(self.my_window.position)
+                    self.last_position_send_time = current_time
         except (BrokenPipeError, OSError, IOError):
             print(f"{self.window_title}: Other window appears to be closed, shutting down")
             self.running = False
-            return  
+            return
+            
+        if self.pos_recv_pipe and self.pos_recv_pipe.poll():
+            try:
+                self.other_window_pos = self.pos_recv_pipe.recv()
+            except (EOFError, BrokenPipeError):
+                print(f"{self.window_title}: Position pipe connection closed.")
+                self.running = False
+            except Exception as e:
+                print(f"{self.window_title}: Error receiving position data: {e}")
+                
+    
+        current_pos = self.my_window.position
+        if True:
+            self.my_position = current_pos
+        
+                
+
         if self.pos_recv_pipe and self.pos_recv_pipe.poll():
             try:
                 self.other_window_pos = self.pos_recv_pipe.recv()
