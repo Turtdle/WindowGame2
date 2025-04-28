@@ -1,6 +1,7 @@
 # levels/level3.py
 import pygame
 from levels.level import Level
+import level_data  # Import our level data module
 
 class Level3(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
@@ -15,6 +16,8 @@ class Level3(Level):
         self.window1_walls = [
             # Top horizontal wall
             pygame.Rect(0, 50, window1_width, self.wall_thickness),
+            # Bottom horizontal wall - ground
+            pygame.Rect(0, window1_height - 50, window1_width, self.wall_thickness),
             # Left platform
             pygame.Rect(0, window1_height // 3, window1_width // 2 - 100, self.wall_thickness),
             # Right platform
@@ -23,7 +26,8 @@ class Level3(Level):
         
         # Define walls for window 2 (upper window) - L-shaped platforms
         self.window2_walls = [
-
+            # Top horizontal wall
+            pygame.Rect(0, 50, window2_width, self.wall_thickness),
             # Bottom horizontal wall - ground
             pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness),
             # Left L-shape
@@ -57,7 +61,14 @@ class Level3(Level):
         text_rect = text_surface.get_rect(center=(self.window1_width//2, 30))
         screen.blit(text_surface, text_rect)
         
-
+        # Draw goal
+        pygame.draw.rect(screen, (0, 0, 255), self.goal)
+        
+        # Add text to identify the goal
+        goal_font = pygame.font.Font(None, 36)
+        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
+        goal_text_rect = goal_text.get_rect(center=self.goal.center)
+        screen.blit(goal_text, goal_text_rect)
         
         # Draw walls
         for wall in self.window1_walls:
@@ -78,7 +89,14 @@ class Level3(Level):
             player.draw(screen)
             
             # Check if player reached the goal
-
+            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+            if player_rect.colliderect(self.goal) and not self.completed:
+                self.completed = True
+                self.should_teleport_player = True
+                print("Level 3 completed! Teleporting player back to Window 1")
+                
+                # Mark level as completed in the JSON file
+                level_data.mark_level_completed("Level3")
             
     
     def draw_window2(self, screen, player=None):
@@ -87,14 +105,7 @@ class Level3(Level):
         text_surface = font.render("Use these L-shaped platforms and fall through the gap!", True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(self.window2_width//2, 30))
         screen.blit(text_surface, text_rect)
-                # Draw goal
-        pygame.draw.rect(screen, (0, 0, 255), self.goal)
         
-        # Add text to identify the goal
-        goal_font = pygame.font.Font(None, 36)
-        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
-        goal_text_rect = goal_text.get_rect(center=self.goal.center)
-        screen.blit(goal_text, goal_text_rect)
         # Draw walls and platforms
         for wall in self.window2_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
@@ -115,11 +126,7 @@ class Level3(Level):
             
             # Draw player
             player.draw(screen)
-            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-            if player_rect.colliderect(self.goal) and not self.completed:
-                    self.completed = True
-                    self.should_teleport_player = True
-                    print("Level 3 completed! Teleporting player back to Window 1")
+            
     def apply_gravity(self, player):
         # Apply gravity to the player's vertical velocity
         player.vy += self.gravity

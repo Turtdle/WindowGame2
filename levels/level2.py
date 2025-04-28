@@ -1,6 +1,7 @@
 # levels/level2.py
 import pygame
 from levels.level import Level
+import level_data  # Import our level data module
 
 class Level2(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
@@ -78,7 +79,6 @@ class Level2(Level):
         
         # Draw the player if present
         if player:
-
             
             # Apply gravity
             self.apply_gravity(player)
@@ -97,9 +97,10 @@ class Level2(Level):
             if player_rect.colliderect(self.goal) and not self.completed:
                 self.completed = True
                 self.should_teleport_player = True
-                # If we're in Window 1 and completed level, special handling needed
-                # This triggers teleport in the WindowClass
                 print("Level 2 completed! Teleporting player back to Window 1")
+                
+                # Mark level as completed in the JSON file
+                level_data.mark_level_completed("Level2")
             
     def draw_window2(self, screen, player=None):
         # Draw info text

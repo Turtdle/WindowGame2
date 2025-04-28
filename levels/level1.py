@@ -1,6 +1,7 @@
 # levels/level1.py
 import pygame
 from levels.level import Level
+import level_data  # Import our level data module
 
 class Level1(Level):
 # For example in Level3:
@@ -94,6 +95,9 @@ class Level1(Level):
                 self.completed = True
                 self.should_teleport_player = True
                 print("Level 1 completed! Teleporting player back to Window 1")
+                
+                # Mark level as completed in the JSON file
+                level_data.mark_level_completed("Level1")
     
     def check_wall_collisions(self, player, walls):
         # Store original position to revert if needed
