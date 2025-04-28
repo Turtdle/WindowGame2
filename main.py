@@ -6,6 +6,7 @@ from pygame._sdl2.video import Window
 from character import Character 
 import time
 from window import WindowClass
+from levels.level_selector import Level_Selector
 
 def create_window(window_title="Window", width=1000, height=1000, bg_color=(255, 255, 255), 
                   origin=False, 
@@ -16,11 +17,14 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
         
     print(f"Creating {window_title}...")
 
-
     pygame.init()
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption(window_title)
     clock = pygame.time.Clock()
+    
+    # Create the level selector
+    level_selector = Level_Selector(width, height, width, height)
+    
     window = WindowClass(window_title=window_title, width=width, height=height, bg_color=bg_color,
                     origin=origin, 
                     pos_send_pipe=pos_send_pipe,
@@ -28,9 +32,8 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                     transfer_send_pipe=transfer_send_pipe,
                     transfer_recv_pipe=transfer_recv_pipe,
                     my_window=Window.from_display_module(),
+                    current_level=level_selector,
                     running=True)
-
-
     
     while window.running:
         window.tick()
@@ -41,10 +44,12 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     window.running = False
+            
+            # Pass other events to the window
+            window.handle_event(event)
         
-        screen.fill(bg_color)
-        if window.has_player and window.player:
-            window.player.draw(screen)
+        # Draw the window
+        window.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)
