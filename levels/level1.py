@@ -6,7 +6,7 @@ class Level1(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
         super().__init__(window1_width, window1_height, window2_width, window2_height)
         
-        self.spawn_position = (100, window1_height - 150)  # Near bottom left
+        self.spawn_position = (window1_width//2, window1_height//2)  # Near bottom left
         
         self.wall_thickness = 25
         

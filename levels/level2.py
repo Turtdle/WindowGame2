@@ -40,7 +40,7 @@ class Level2(Level):
     def draw_window1(self, screen, player=None):
         font = pygame.font.Font(None, 36)
         text_surface = font.render("Level 2: Moving Between Windows", True, (0, 0, 0))
-        text_surface2 = font.render("Use both windows to reach the goal!", True, (0, 0, 0))
+        text_surface2 = font.render("Space to jump", True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(self.window1_width//2, 30))
         screen.blit(text_surface, text_rect)
         text_rect2 = text_surface2.get_rect(center=(self.window1_width//2, 90))
@@ -77,9 +77,6 @@ class Level2(Level):
             
     def draw_window2(self, screen, player=None):
         font = pygame.font.Font(None, 36)
-        text_surface = font.render("Use these platforms to reach the goal!", True, (0, 0, 0))
-        text_rect = text_surface.get_rect(center=(self.window2_width//2, 30))
-        screen.blit(text_surface, text_rect)
         
         for wall in self.window2_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
