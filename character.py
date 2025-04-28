@@ -26,13 +26,15 @@ class Character:
             (self.x, self.y, self.size, self.size)
         )
 
+# In character.py, update the handle_keys method to include Level3
+
     def handle_keys(self):
         keys = pygame.key.get_pressed()
         self.vx = 0  # Always reset horizontal velocity
         
         # Handle level-specific movement
-        if self.current_level == "Level2":
-            # For Level2: Don't reset vy, only control horizontal movement
+        if self.current_level == "Level2" or self.current_level == "Level3":
+            # For Level2 and Level3: Don't reset vy, only control horizontal movement
             if keys[pygame.K_LEFT] or keys[pygame.K_a]:
                 self.vx = -self.speed
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:

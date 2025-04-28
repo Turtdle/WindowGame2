@@ -33,7 +33,14 @@ class WindowClass:
 # In window.py __init__ method:
         if self.origin:
             self.has_player = True
-            self.player = Character(x=width//2, y=height//2)
+            # Use level's spawn position if available
+            if self.current_level and hasattr(self.current_level, 'spawn_position'):
+                spawn_x, spawn_y = self.current_level.spawn_position
+                
+            else:
+                
+                spawn_x, spawn_y = width//2, height//2
+            self.player = Character(x=spawn_x, y=spawn_y)
             if self.current_level:
                 self.player.set_level(self.current_level.__class__.__name__)
         self.mouse_down = False
@@ -70,8 +77,8 @@ class WindowClass:
                 try:
                     teleport_data = {
                         "type": "teleport_player",
-                        "position": (self.width//2, self.height//2),
-                        "level": self.current_level.__class__.__name__  # Add this line
+                        "position": self.current_level.spawn_position if hasattr(self.current_level, 'spawn_position') else (self.width//2, self.height//2),
+                        "level": self.current_level.__class__.__name__
                     }
                     self.transfer_send_pipe.send(teleport_data)
                     self.teleport_sent = True  # Mark that we've sent the teleport message
@@ -132,10 +139,17 @@ class WindowClass:
                     if self.window_title == "Window 1":
                         print(f"{self.window_title}: Processing teleport_player data")
                         self.has_player = True
-                        position = data.get("position", (self.width//2, self.height//2))
-                        if not self.player:  # Create player if it doesn't exist
+                        
+                        # Check for custom spawn position in the level
+                        if self.current_level and hasattr(self.current_level, 'spawn_posi   tion'):
+                            position = self.current_level.spawn_position
+                        else:
+                            # Fall back to position from data or default center
+                            position = data.get("position", (self.width//2, self.height//2))
+                            
+                        if not self.player: # Create player if it doesn't exist
                             self.player = Character(x=position[0], y=position[1])
-                        else:  # Update player position if it exists
+                        else: # Update player position if it exists
                             self.player.x = position[0]
                             self.player.y = position[1]
                         
@@ -158,10 +172,15 @@ class WindowClass:
                         from levels.level2 import Level2
                         self.current_level = Level2(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
+                    elif level_name == "Level3":  # Add Level3 handling
+                        from levels.level3 import Level3
+                        self.current_level = Level3(self.width, self.height, self.width, self.height)
+                        print(f"{self.window_title}: Received level change to {level_name}")
                     elif level_name == "Level_Selector":
                         from levels.level_selector import Level_Selector
                         self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
+
                 # Handle player transfers
 # Handle player transfers
                 elif not self.has_player and isinstance(data, dict) and "side" in data:

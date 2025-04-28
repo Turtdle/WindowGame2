@@ -3,8 +3,12 @@ import pygame
 from levels.level import Level
 
 class Level1(Level):
+# For example in Level3:
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
         super().__init__(window1_width, window1_height, window2_width, window2_height)
+        
+        # Set custom spawn position
+        self.spawn_position = (100, window1_height - 150)  # Near bottom left
         
         # Wall thickness - making it slightly thicker for better collisions
         self.wall_thickness = 25
