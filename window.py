@@ -49,6 +49,14 @@ class WindowClass:
         self.teleport_sent = False
 
     def tick(self):
+        try:
+            # First, add timeout to prevent hanging
+            if self.pos_send_pipe and not self.pos_send_pipe.closed:
+                self.pos_send_pipe.send(self.my_window.position)
+        except (BrokenPipeError, OSError, IOError):
+            print(f"{self.window_title}: Other window appears to be closed, shutting down")
+            self.running = False
+            return  # Exit tick early
         # Handle window position communication
         if self.pos_recv_pipe and self.pos_recv_pipe.poll():
             try:
@@ -133,10 +141,16 @@ class WindowClass:
         
         # Handle transfer data (player movement & level changes)
         if self.transfer_recv_pipe and self.transfer_recv_pipe.poll():
+            
             try:
                 data = self.transfer_recv_pipe.recv()
                 print(f"{self.window_title}: Received data: {data}")
                 
+                # Add this block to handle window closing message
+                if isinstance(data, dict) and data.get("type") == "window_closing":
+                    print(f"{self.window_title}: Other window is closing, shutting down")
+                    self.running = False
+                    return  # Exit tick early
                 # When receiving teleport data:
                 if isinstance(data, dict) and data.get("type") == "teleport_player":
                     if self.window_title == "Window 1":

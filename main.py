@@ -35,49 +35,77 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                     current_level=level_selector,
                     running=True)
     
-    while window.running:
-        window.tick()
+    try:
+        while window.running:
+            window.tick()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                window.running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     window.running = False
+                    # Signal to the other window that we're closing
+                    if transfer_send_pipe:
+                        try:
+                            transfer_send_pipe.send({"type": "window_closing"})
+                        except:
+                            pass
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        window.running = False
+                        # Signal to the other window that we're closing
+                        if transfer_send_pipe:
+                            try:
+                                transfer_send_pipe.send({"type": "window_closing"})
+                            except:
+                                pass
+                
+                # Pass other events to the window
+                window.handle_event(event)
             
-            # Pass other events to the window
-            window.handle_event(event)
+            # Draw the window
+            window.draw(screen)
+            
+            pygame.display.flip()
+            clock.tick(60)
+    finally:
+        # Always clean up resources
+        print(f"Closing {window_title}")
+        try:
+            if transfer_send_pipe and not transfer_send_pipe.closed:
+                transfer_send_pipe.send({"type": "window_closing"})
+        except:
+            pass  # Ignore errors during shutdown
         
-        # Draw the window
-        window.draw(screen)
-        
-        pygame.display.flip()
-        clock.tick(60)
-    
-    print(f"Closing {window_title}")
-    if pos_send_pipe:
-        try:
-            pos_send_pipe.close()
-        except Exception as e:
-             print(f"{window_title}: Error closing pos_send_pipe: {e}")
-    if pos_recv_pipe:
-        try:
-            pos_recv_pipe.close()
-        except Exception as e:
-            print(f"{window_title}: Error closing pos_recv_pipe: {e}")
-            
-    if transfer_send_pipe:
-        try:
-            transfer_send_pipe.close()  
-        except Exception as e:
-            print(f"{window_title}: Error closing transfer_send_pipe: {e}")
-    if transfer_recv_pipe:
-        try:
-            transfer_recv_pipe.close()
-        except Exception as e:
-            print(f"{window_title}: Error closing transfer_recv_pipe: {e}")
-            
-    pygame.quit()
+        # Close pipes with better error handling
+        for pipe in [pos_send_pipe, pos_recv_pipe, transfer_send_pipe, transfer_recv_pipe]:
+            if pipe:
+                try:
+                    if not pipe.closed:
+                        pipe.close()
+                except Exception as e:
+                    print(f"{window_title}: Error closing pipe: {e}")
+        if pos_send_pipe:
+            try:
+                pos_send_pipe.close()
+            except Exception as e:
+                print(f"{window_title}: Error closing pos_send_pipe: {e}")
+        if pos_recv_pipe:
+            try:
+                pos_recv_pipe.close()
+            except Exception as e:
+                print(f"{window_title}: Error closing pos_recv_pipe: {e}")
+                
+        if transfer_send_pipe:
+            try:
+                transfer_send_pipe.close()  
+            except Exception as e:
+                print(f"{window_title}: Error closing transfer_send_pipe: {e}")
+        if transfer_recv_pipe:
+            try:
+                transfer_recv_pipe.close()
+            except Exception as e:
+                print(f"{window_title}: Error closing transfer_recv_pipe: {e}")
+                
+        pygame.quit()
 
 def main():
     pos_pipe_1_recv, pos_pipe_1_send = multiprocessing.Pipe(duplex=False)

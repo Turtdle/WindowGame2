@@ -6,6 +6,8 @@ class Level2(Level):
     def __init__(self, window1_width, window1_height, window2_width, window2_height):
         super().__init__(window1_width, window1_height, window2_width, window2_height)
         
+        # Set custom spawn position
+        self.spawn_position = (100, window1_height - 150)  # Near bottom left
         # Wall thickness
         self.wall_thickness = 25
         
@@ -69,10 +71,6 @@ class Level2(Level):
         screen.blit(goal_text, goal_text_rect)
         
         # Draw debug info
-        if player and hasattr(self, 'debug_info'):
-            debug_font = pygame.font.Font(None, 24)
-            debug_text = debug_font.render(self.debug_info, True, (255, 0, 0))
-            screen.blit(debug_text, (10, 120))
         
         # Draw walls
         for wall in self.window1_walls:
