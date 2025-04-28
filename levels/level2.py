@@ -25,7 +25,6 @@ class Level2(Level):
         self.window2_walls = [
             # Top horizontal wall
             pygame.Rect(0, 50, window2_width, self.wall_thickness),
-
             # Bottom horizontal wall - ground
             pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness),
             # Stepping platforms
@@ -66,6 +65,8 @@ class Level2(Level):
         text_rect2 = text_surface2.get_rect(center=(self.window1_width//2, 90))
         screen.blit(text_surface2, text_rect2)
         
+        # Draw start point (red)
+        pygame.draw.rect(screen, (255, 0, 0), self.start_point)
         
         # Draw goal (blue)
         pygame.draw.rect(screen, (0, 0, 255), self.goal)
@@ -111,6 +112,8 @@ class Level2(Level):
             if player_rect.colliderect(self.goal) and not self.completed:
                 self.completed = True
                 self.should_teleport_player = True
+                # If we're in Window 1 and completed level, special handling needed
+                # This triggers teleport in the WindowClass
                 print("Level 2 completed! Teleporting player back to Window 1")
             
     def draw_window2(self, screen, player=None):
@@ -234,7 +237,7 @@ class Level2(Level):
     
     def get_next_level(self):
         # If the level is completed, return to level selector
-        if self.completed and not self.should_teleport_player:
+        if self.completed:
             print("Returning to level selector...")
             from levels.level_selector import Level_Selector
             return Level_Selector(self.window1_width, self.window1_height, 
