@@ -48,10 +48,8 @@ class WindowClass:
         if not hasattr(self, 'last_position_send_time'):
             self.last_position_send_time = 0
         
-        current_time = pygame.time.get_ticks() / 1000  
-        
+        current_time = pygame.time.get_ticks() / 1000
         try:
-            
             if current_time - self.last_position_send_time >= 0.5:
                 if self.pos_send_pipe and not self.pos_send_pipe.closed:
                     self.pos_send_pipe.send(self.my_window.position)
