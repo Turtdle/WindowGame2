@@ -9,34 +9,41 @@ class Level2(Level):
         # Wall thickness
         self.wall_thickness = 25
         
-        # Define walls for window 1 - just simple boundaries
+        # Define walls for window 1 - setup with platform and gap
         self.window1_walls = [
             # Top horizontal wall
             pygame.Rect(0, 50, window1_width, self.wall_thickness),
-            # Left vertical wall
-            pygame.Rect(0, 50, self.wall_thickness, window1_height - 100),
-            # Right vertical wall
-            pygame.Rect(window1_width - self.wall_thickness, 50, self.wall_thickness, window1_height - 100),
             # Bottom horizontal wall - ground
-            pygame.Rect(0, window1_height - 50, window1_width, self.wall_thickness)
+            pygame.Rect(0, window1_height - 50, window1_width, self.wall_thickness),
+            # Middle platform with gap - can't be jumped over directly
+            pygame.Rect(0, window1_height//2, window1_width - 200, self.wall_thickness),
+            # Short wall to prevent jumping straight to goal
+            pygame.Rect(window1_width - 200, window1_height//2 - 200, self.wall_thickness, 200)
         ]
         
-        # Define walls for window 2 - also simple boundaries
+        # Define walls for window 2 - stepping platforms
         self.window2_walls = [
             # Top horizontal wall
             pygame.Rect(0, 50, window2_width, self.wall_thickness),
-            # Left vertical wall
-            pygame.Rect(0, 50, self.wall_thickness, window2_height - 100),
-            # Right vertical wall
-            pygame.Rect(window2_width - self.wall_thickness, 50, self.wall_thickness, window2_height - 100),
+
             # Bottom horizontal wall - ground
-            pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness)
+            pygame.Rect(0, window2_height - 50, window2_width, self.wall_thickness),
+            # Stepping platforms
+            pygame.Rect(window2_width//4, window2_height - 200, window2_width//4, self.wall_thickness),
+            pygame.Rect(window2_width//2, window2_height - 350, window2_width//4, self.wall_thickness)
         ]
         
-        # Define the goal in window 2
+        # Define the starting point in window 1 (red in the sketch)
+        self.start_point = pygame.Rect(
+            100, 
+            window1_height - 100, 
+            80, 80
+        )
+        
+        # Define the goal in window 1 (blue in the sketch)
         self.goal = pygame.Rect(
-            window2_width - 150, 
-            150, 
+            window1_width - 150, 
+            window1_height//2 - 150, 
             80, 80
         )
         
@@ -52,12 +59,22 @@ class Level2(Level):
     def draw_window1(self, screen, player=None):
         # Draw instructions
         font = pygame.font.Font(None, 36)
-        text_surface = font.render("Level 2: Gravity Room", True, (0, 0, 0))
-        text_surface2 = font.render("Press SPACE to jump, reach the goal in the other window", True, (0, 0, 0))
+        text_surface = font.render("Level 2: Moving Between Windows", True, (0, 0, 0))
+        text_surface2 = font.render("Use both windows to reach the goal!", True, (0, 0, 0))
         text_rect = text_surface.get_rect(center=(self.window1_width//2, 30))
         screen.blit(text_surface, text_rect)
         text_rect2 = text_surface2.get_rect(center=(self.window1_width//2, 90))
         screen.blit(text_surface2, text_rect2)
+        
+        
+        # Draw goal (blue)
+        pygame.draw.rect(screen, (0, 0, 255), self.goal)
+        
+        # Add text to identify the goal
+        goal_font = pygame.font.Font(None, 36)
+        goal_text = goal_font.render("GOAL", True, (255, 255, 255))
+        goal_text_rect = goal_text.get_rect(center=self.goal.center)
+        screen.blit(goal_text, goal_text_rect)
         
         # Draw debug info
         if player and hasattr(self, 'debug_info'):
@@ -89,19 +106,23 @@ class Level2(Level):
             # Draw player
             player.draw(screen)
             
+            # Check if player reached the goal
+            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+            if player_rect.colliderect(self.goal) and not self.completed:
+                self.completed = True
+                self.should_teleport_player = True
+                print("Level 2 completed! Teleporting player back to Window 1")
+            
     def draw_window2(self, screen, player=None):
-        # Draw walls
+        # Draw info text
+        font = pygame.font.Font(None, 36)
+        text_surface = font.render("Use these platforms to reach the goal!", True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(self.window2_width//2, 30))
+        screen.blit(text_surface, text_rect)
+        
+        # Draw walls and platforms
         for wall in self.window2_walls:
             pygame.draw.rect(screen, (0, 0, 0), wall)
-        
-        # Draw the goal
-        pygame.draw.rect(screen, (0, 0, 255), self.goal)
-        
-        # Add text to identify the goal
-        font = pygame.font.Font(None, 36)
-        text_surface = font.render("GOAL", True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=self.goal.center)
-        screen.blit(text_surface, text_rect)
         
         # Draw debug info
         if player and hasattr(self, 'debug_info'):
@@ -128,13 +149,6 @@ class Level2(Level):
             
             # Draw player
             player.draw(screen)
-            
-            # Check if player reached the goal
-            player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-            if player_rect.colliderect(self.goal) and not self.completed:
-                self.completed = True
-                self.should_teleport_player = True
-                print("Level 2 completed! Teleporting player back to Window 1")
     
     def apply_gravity(self, player):
         # Apply gravity to the player's vertical velocity
@@ -173,14 +187,13 @@ class Level2(Level):
                 player.vy = self.jump_power
                 self.on_ground = False
                 print(f"JUMP! vy set to {player.vy}")
-            else:
-                print("not space")
-        else:
-            print("key recieved but was  not on ground")
     
     def check_wall_collisions(self, player, walls):
         # Create a rectangle for the player's current position
         player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
+        
+        # Initially set on_ground to False - will be set to True if standing on a platform
+        self.on_ground = False
         
         # Check collision with each wall
         for wall in walls:
@@ -210,10 +223,9 @@ class Level2(Level):
                         player.y = wall.top - player.size  # Push up
                         
                         # If collision with bottom wall, set on_ground to True
-                        # Check if this is a floor collision (bottom wall)
+                        # This happens when the player lands on top of a platform
                         if wall.top > player.y + (player.size / 2):
                             self.on_ground = True
-                            print("ON GROUND!")
                         
                         player.vy = 0
                 
