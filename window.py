@@ -2,6 +2,8 @@ from multiprocessing.connection import Connection
 from character import Character
 from pygame._sdl2.video import Window
 
+
+
 class WindowClass:
     def __init__(self, window_title="Window", width=1000, height=1000, bg_color=(255, 255, 255), 
                   origin=False, 
@@ -9,7 +11,8 @@ class WindowClass:
                   pos_recv_pipe: Connection = None,
                   transfer_send_pipe: Connection = None,
                   transfer_recv_pipe: Connection = None,
-                  my_window=None):
+                  my_window=None, current_level=None, running=True):
+        
         self.has_player = False
         self.window_title = window_title
         self.width = width
@@ -24,9 +27,12 @@ class WindowClass:
         self.my_window = my_window
         self.my_position = self.my_window.position
         self.player = None
+        self.running = running
+
         if self.origin:
             self.has_player = True
             self.player = Character(x=width//2, y=height//2)
+        self.current_level = current_level
 
     def tick(self):
     
@@ -35,7 +41,7 @@ class WindowClass:
                 self.other_window_pos = self.pos_recv_pipe.recv()
             except (EOFError, BrokenPipeError):
                 print(f"{self.window_title}: Position pipe connection closed.")
-                running = False
+                self.running = False
             except Exception as e:
                 print(f"{self.window_title}: Error receiving position data: {e}")
                 pass
@@ -56,7 +62,7 @@ class WindowClass:
                     
             except (EOFError, BrokenPipeError):
                 print(f"{self.window_title}: Transfer pipe connection closed.")
-                running = False
+                self.running = False
             except Exception as e:
                 print(f"{self.window_title}: Error receiving transfer data: {e}")
                 pass
@@ -69,7 +75,7 @@ class WindowClass:
                 self.pos_send_pipe.send(my_position)
              except (BrokenPipeError, OSError):
                 print(f"{self.window_title}: Error sending position, pipe may be closed.")
-                running = False
+                self.running = False
         
         if self.has_player and self.player:
             self.player.handle_keys()
@@ -97,7 +103,7 @@ class WindowClass:
                             transfer_occurred = True
                         except (BrokenPipeError, OSError):
                             print(f"{self.window_title}: Error sending player, pipe may be closed.")
-                            running = False
+                            self.running = False
                     else:
                         print("not aligned")
                 else:
@@ -122,7 +128,7 @@ class WindowClass:
                              transfer_occurred = True
                         except (BrokenPipeError, OSError):
                              print(f"{self.window_title}: Error sending player, pipe may be closed.")
-                             running = False
+                             self.running = False
                     else:
                         print("not aligned")
                 else:

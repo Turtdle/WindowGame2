@@ -27,19 +27,20 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                     pos_recv_pipe=pos_recv_pipe,
                     transfer_send_pipe=transfer_send_pipe,
                     transfer_recv_pipe=transfer_recv_pipe,
-                    my_window=Window.from_display_module())
+                    my_window=Window.from_display_module(),
+                    running=True)
 
 
     
-    running = True
-    while running:
+    while window.running:
         window.tick()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                window.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running = False
+                    window.running = False
         
         screen.fill(bg_color)
         if window.has_player and window.player:
