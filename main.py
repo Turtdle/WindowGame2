@@ -5,6 +5,7 @@ from multiprocessing.connection import Connection
 from pygame._sdl2.video import Window
 from character import Character 
 import time
+from window import WindowClass
 
 def create_window(window_title="Window", width=1000, height=1000, bg_color=(255, 255, 255), 
                   origin=False, 
@@ -12,55 +13,27 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                   pos_recv_pipe: Connection = None,
                   transfer_send_pipe: Connection = None,
                   transfer_recv_pipe: Connection = None):
-    has_player = False
+        
+    print(f"Creating {window_title}...")
+
+
     pygame.init()
     screen = pygame.display.set_mode((width, height))
     pygame.display.set_caption(window_title)
     clock = pygame.time.Clock()
-    
-    player = None
-    if origin:
-        has_player = True
-        player = Character(x=width//2, y=height//2)
-    
-    other_window_pos = None
-    my_window = Window.from_display_module()
-    my_position = my_window.position
+    window = WindowClass(window_title=window_title, width=width, height=height, bg_color=bg_color,
+                    origin=origin, 
+                    pos_send_pipe=pos_send_pipe,
+                    pos_recv_pipe=pos_recv_pipe,
+                    transfer_send_pipe=transfer_send_pipe,
+                    transfer_recv_pipe=transfer_recv_pipe,
+                    my_window=Window.from_display_module())
 
+
+    
     running = True
     while running:
-        
-        if pos_recv_pipe and pos_recv_pipe.poll():
-            try:
-                other_window_pos = pos_recv_pipe.recv()
-            except (EOFError, BrokenPipeError):
-                print(f"{window_title}: Position pipe connection closed.")
-                running = False
-            except Exception as e:
-                print(f"{window_title}: Error receiving position data: {e}")
-                pass
-                
-        if transfer_recv_pipe and transfer_recv_pipe.poll():
-            try:
-                data = transfer_recv_pipe.recv()
-                if not has_player:
-                    pass_data = data
-                    has_player = True
-                    
-                    if pass_data.get("side") == "right":
-                        player = Character(x=0 + 5, y=pass_data.get("relative", height//2)) 
-                    elif pass_data.get("side") == "left":
-                         player = Character(x=width - Character().size - 5, y=pass_data.get("relative", height//2))
-                    
-                    print(f"{window_title} received player at ({player.x}, {player.y})")
-                    
-            except (EOFError, BrokenPipeError):
-                print(f"{window_title}: Transfer pipe connection closed.")
-                running = False
-            except Exception as e:
-                print(f"{window_title}: Error receiving transfer data: {e}")
-                pass
-                
+        window.tick()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -68,79 +41,9 @@ def create_window(window_title="Window", width=1000, height=1000, bg_color=(255,
                 if event.key == pygame.K_ESCAPE:
                     running = False
         
-        current_pos = my_window.position
-        if True:
-             my_position = current_pos
-             try:
-                #print(f'window: {window_title} is sending position')
-                pos_send_pipe.send(my_position)
-             except (BrokenPipeError, OSError):
-                print(f"{window_title}: Error sending position, pipe may be closed.")
-                running = False
-        
-        if has_player and player:
-            player.handle_keys()
-            player.update()
-            
-            transfer_occurred = False
-
-            if player.x + player.size >= width:
-                other_win_title = "Window 2" if window_title == "Window 1" else "Window 1"
-                print(other_win_title)
-                if other_window_pos and transfer_send_pipe:
-                    vert_aligned = abs(my_position[1] - other_window_pos[1]) < 100
-                    horz_aligned = abs((my_position[0] + width) - other_window_pos[0]) < 50
-
-                    if vert_aligned and horz_aligned:
-                        print(f"{window_title}: Attempting to pass player right to {other_win_title}")
-                        pass_data = {
-                            "side": "right",
-                            "relative": player.y,
-                        }
-                        try:
-                            transfer_send_pipe.send(pass_data)
-                            has_player = False
-                            player = None
-                            transfer_occurred = True
-                        except (BrokenPipeError, OSError):
-                            print(f"{window_title}: Error sending player, pipe may be closed.")
-                            running = False
-                    else:
-                        print("not aligned")
-                else:
-                    print(f'outer win pos is; {other_window_pos}, transfer send pipe is: {transfer_send_pipe}')
-            elif player.x <= 0:
-                other_win_title = "Window 2" if window_title == "Window 1" else "Window 1"
-                print(other_win_title)
-                if other_window_pos and transfer_send_pipe:
-                    vert_aligned = abs(my_position[1] - other_window_pos[1]) < 100 
-                    horz_aligned = abs((other_window_pos[0] + width) - my_position[0]) < 50
-
-                    if vert_aligned and horz_aligned:
-                        print(f"{window_title}: Attempting to pass player left to {other_win_title}") 
-                        pass_data = {
-                            "side": "left",
-                            "relative": player.y,
-                        }
-                        try:
-                             transfer_send_pipe.send(pass_data)
-                             has_player = False
-                             player = None
-                             transfer_occurred = True
-                        except (BrokenPipeError, OSError):
-                             print(f"{window_title}: Error sending player, pipe may be closed.")
-                             running = False
-                    else:
-                        print("not aligned")
-                else:
-                    print(f'outer win pos is; {other_window_pos}, transfer send pipe is: {transfer_send_pipe}')
-            
-            if has_player and player and not transfer_occurred:
-                player.keep_in_bounds(width, height)
-                
         screen.fill(bg_color)
-        if has_player and player:
-            player.draw(screen)
+        if window.has_player and window.player:
+            window.player.draw(screen)
         
         pygame.display.flip()
         clock.tick(60)
