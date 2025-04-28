@@ -301,7 +301,7 @@ class WindowClass:
 # (around line 179, near the existing transfer logic)
 
             # Check for bottom edge transfer
-            if allow_transfer and self.player.y + self.player.size >= self.height:
+            elif allow_transfer and self.player.y + self.player.size >= self.height:
                 other_win_title = "Window 2" if self.window_title == "Window 1" else "Window 1"
                 if self.other_window_pos and self.transfer_send_pipe:
                     horz_aligned = abs(my_position[0] - self.other_window_pos[0]) < 100
