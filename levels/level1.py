@@ -47,3 +47,11 @@ class Level1(Level):
             if player_rect.colliderect(self.goal):
                 self.completed = True
                 print("Level 1 completed!")
+    def get_next_level(self):
+        # If the level is completed, return a new Level_Selector instance
+        if self.completed:
+            print("Returning to level selector...")
+            from levels.level_selector import Level_Selector
+            return Level_Selector(self.window1_width, self.window1_height, 
+                                self.window2_width, self.window2_height)
+        return None

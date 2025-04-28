@@ -58,24 +58,36 @@ class WindowClass:
                 print(f"{self.window_title}: Error sending position, pipe may be closed.")
                 self.running = False
         
-        # Check for level changes in Window 1
-        if self.window_title == "Window 1" and self.current_level:
+        if self.current_level:
             next_level = self.current_level.get_next_level()
             if next_level:
                 # Set our own level
+                prev_level_name = self.current_level.__class__.__name__
                 self.current_level = next_level
-                print(f"{self.window_title}: Switched to new level")
+                print(f"{self.window_title}: Switched from {prev_level_name} to {next_level.__class__.__name__}")
                 
-                # Send level change to Window 2
-                try:
-                    level_data = {
-                        "type": "level_change",
-                        "level_name": next_level.__class__.__name__
-                    }
-                    self.transfer_send_pipe.send(level_data)
-                    print(f"{self.window_title}: Sent level change to other window")
-                except (BrokenPipeError, OSError) as e:
-                    print(f"{self.window_title}: Error sending level change: {e}")
+                # If this is Window 1, send level change to Window 2
+                if self.window_title == "Window 1":
+                    try:
+                        level_data = {
+                            "type": "level_change",
+                            "level_name": next_level.__class__.__name__
+                        }
+                        self.transfer_send_pipe.send(level_data)
+                        print(f"{self.window_title}: Sent level change to Window 2")
+                    except (BrokenPipeError, OSError) as e:
+                        print(f"{self.window_title}: Error sending level change: {e}")
+                # If this is Window 2, notify Window 1 that it has completed a level
+                elif self.window_title == "Window 2":
+                    try:
+                        level_data = {
+                            "type": "level_completed",
+                            "level_name": "Level_Selector"
+                        }
+                        self.transfer_send_pipe.send(level_data)
+                        print(f"{self.window_title}: Notified Window 1 of level completion")
+                    except (BrokenPipeError, OSError) as e:
+                        print(f"{self.window_title}: Error notifying of level completion: {e}")
         
         # Handle transfer data (player movement & level changes)
         if self.transfer_recv_pipe and self.transfer_recv_pipe.poll():
@@ -90,7 +102,10 @@ class WindowClass:
                         self.current_level = Level1(self.width, self.height, self.width, self.height)
                         print(f"{self.window_title}: Received level change to {level_name}")
                     # Can add other levels here as they're implemented
-                    
+                    elif level_name == "Level_Selector":
+                        from levels.level_selector import Level_Selector
+                        self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
+                        print(f"{self.window_title}: Received level change to {level_name}")
                 # Handle player transfers
                 elif not self.has_player and isinstance(data, dict) and "side" in data:
                     self.has_player = True
@@ -102,6 +117,24 @@ class WindowClass:
                     
                     print(f"{self.window_title} received player at ({self.player.x}, {self.player.y})")
                     
+                elif isinstance(data, dict) and data.get("type") == "level_completed":
+                    level_name = data.get("level_name")
+                    if level_name == "Level_Selector" and self.window_title == "Window 1":
+                        from levels.level_selector import Level_Selector
+                        self.current_level = Level_Selector(self.width, self.height, self.width, self.height)
+                        print(f"{self.window_title}: Switched to level selector due to completion notification")
+                        
+                        # Also inform Window 2 to switch to the level selector
+                        try:
+                            level_data = {
+                                "type": "level_change",
+                                "level_name": "Level_Selector"
+                            }
+                            self.transfer_send_pipe.send(level_data)
+                            print(f"{self.window_title}: Sent level change to Window 2")
+                        except (BrokenPipeError, OSError) as e:
+                            print(f"{self.window_title}: Error sending level change: {e}")
+                
             except (EOFError, BrokenPipeError):
                 print(f"{self.window_title}: Transfer pipe connection closed.")
                 self.running = False
