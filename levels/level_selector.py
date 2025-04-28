@@ -100,7 +100,7 @@ class Level_Selector(Level):
     def draw_window2(self, screen, player=None):
         # Draw title in window 2
         font = pygame.font.Font(None, 48)
-        title_text = "A Window"
+        title_text = "Alt-Tab Adventures"
         title_surface = font.render(title_text, True, (0, 0, 0))
         title_rect = title_surface.get_rect(center=(self.window2_width//2, self.window2_height//3))
         screen.blit(title_surface, title_rect)
