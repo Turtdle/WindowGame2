@@ -86,7 +86,7 @@ class Level1(Level):
             
             # Check if player reached the goal
             player_rect = pygame.Rect(player.x, player.y, player.size, player.size)
-            if player_rect.colliderect(self.goal):
+            if player_rect.colliderect(self.goal) and not self.completed:
                 self.completed = True
                 self.should_teleport_player = True
                 print("Level 1 completed! Teleporting player back to Window 1")

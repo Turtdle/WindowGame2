@@ -116,7 +116,11 @@ class WindowClass:
                     if self.window_title == "Window 1":
                         self.has_player = True
                         position = data.get("position", (self.width//2, self.height//2))
-                        self.player = Character(x=position[0], y=position[1])
+                        if not self.player:  # Create player if it doesn't exist
+                            self.player = Character(x=position[0], y=position[1])
+                        else:  # Update player position if it exists
+                            self.player.x = position[0]
+                            self.player.y = position[1]
                         print(f"{self.window_title}: Player teleported back at position {position}")
                 # Check if this is a level change notification
                 elif isinstance(data, dict) and data.get("type") == "level_change":
